@@ -18,19 +18,22 @@ body{margin:0;background:#f3f6f4;color:#17251c;font-family:-apple-system,BlinkMa
 main{max-width:520px;margin:auto;padding:20px 16px 45px}
 header{text-align:center;padding:18px 0}
 h1{font-size:23px;margin:5px}
+h3{margin-top:0}
 .muted{color:#718078;font-size:14px}
 .card{background:white;border-radius:18px;padding:18px;margin:13px 0;box-shadow:0 3px 14px #00000009}
 .today{font-size:30px;font-weight:800;margin:10px}
 input,button{font:inherit}
 input[type=date],input[type=number],input[type=text]{
- width:100%;padding:13px;border:1px solid #dce5de;
- border-radius:11px;background:white;margin:7px 0
+  width:100%;padding:13px;border:1px solid #dce5de;
+  border-radius:11px;background:white;margin:7px 0
 }
 .buttons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
 button{border:0;border-radius:12px;padding:14px;font-weight:700;cursor:pointer}
 .work{background:#168044;color:white}
 .rest{background:#c43d3d;color:white}
 .save{background:#166534;color:white;width:100%;margin-top:8px}
+.secondary{background:#edf4ef;color:#166534;width:100%;margin-top:8px}
+.cancel{background:#edf0ed;color:#44534a;width:100%;margin-top:8px}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat{background:#f2f7f3;padding:15px;border-radius:13px}
 .stat strong{display:block;font-size:26px;margin-top:5px}
@@ -38,169 +41,156 @@ button{border:0;border-radius:12px;padding:14px;font-weight:700;cursor:pointer}
 .money{font-size:27px;font-weight:800;color:#168044;margin:10px 0}
 .line{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #edf0ed;font-size:14px}
 .record{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid #eee}
-.record button{padding:7px 10px;background:#fff0f0;color:#b42323;font-size:12px;flex-shrink:0}
+.record-info{flex:1;min-width:0}
+.record-actions{display:flex;gap:6px;flex-shrink:0}
+.record button{padding:7px 10px;background:#fff0f0;color:#b42323;font-size:12px}
+.record button.edit{background:#edf4ef;color:#166534}
 .small{font-size:12px;color:#718078}
-.section-note{background:#f2f7f3;padding:12px;border-radius:11px;margin:10px 0;font-size:13px;color:#52665a}
+.section-toggle{padding:0;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800;font-size:17px}
+.section-toggle::-webkit-details-marker{display:none}
+.section-toggle::after{content:"＋";font-size:22px;color:#168044}
+details[open]>.section-toggle::after{content:"−"}
+.section-body{padding-top:15px}
+.history-toggle{font-weight:700;color:#166534;background:#edf4ef;width:100%;margin-top:14px}
+.history-body{margin-top:10px}
+.stat-label{font-size:13px;color:#718078}
+.total-highlight{font-size:24px;font-weight:800;color:#168044;margin-top:5px}
+.empty{padding:12px 0;color:#718078;font-size:14px}
 </style>
 </head>
 
 <body>
 <main>
-
 <header>
-<h1>📅 CHẤM CÔNG CÁ NHÂN</h1>
-<div class="muted">Quản lý ngày làm và tiền lương</div>
-<div class="today" id="today"></div>
-<div class="muted" id="weekday"></div>
+  <h1>📅 CHẤM CÔNG CÁ NHÂN</h1>
+  <div class="muted">Quản lý ngày làm và tiền lương</div>
+  <div class="today" id="today"></div>
+  <div class="muted" id="weekday"></div>
 </header>
 
 <section class="card">
-<h3>Chấm công</h3>
-<label class="muted">Chọn ngày muốn chấm</label>
-<input type="date" id="workDate">
-<div id="selectedStatus" class="muted"></div>
-<div class="buttons">
-<button class="work" onclick="mark('Làm')">✓ LÀM</button>
-<button class="rest" onclick="mark('Nghỉ')">☕ NGHỈ</button>
-</div>
-<div class="small" style="margin-top:10px">Có thể chọn ngày cũ để bổ sung hoặc sửa chấm công.</div>
+  <h3>Chấm công</h3>
+  <label class="muted">Chọn ngày muốn chấm</label>
+  <input type="date" id="workDate">
+  <div id="selectedStatus" class="muted"></div>
+  <div class="buttons">
+    <button class="work" onclick="mark('Làm')">✓ LÀM</button>
+    <button class="rest" onclick="mark('Nghỉ')">☕ NGHỈ</button>
+  </div>
+  <div class="small" style="margin-top:10px">Có thể chọn ngày cũ để bổ sung hoặc sửa chấm công.</div>
 </section>
 
 <section class="card">
-<h3>💰 Cài đặt lương</h3>
-<label class="muted">Lương tháng của bạn (VNĐ)</label>
-<input type="number" id="salary" min="0" step="1000" placeholder="Ví dụ: 12000000">
-<button class="save" onclick="saveSalary()">LƯU MỨC LƯƠNG</button>
-</section>
-
-<!-- CHỨC NĂNG CAMERA -->
-<section class="card">
-<h3>📷 Camera lắp đặt</h3>
-
-<div class="section-note">
-Đơn giá: <b>150.000đ / camera</b><br>
-Số lượng được tính theo kỳ lương đang chọn.
-</div>
-
-<label class="muted">Số lượng camera đã lắp</label>
-<input type="number" id="cameraCount" min="0" step="1" placeholder="Nhập số camera">
-
-<div class="line">
-<span>Tiền công camera</span>
-<b class="green" id="cameraMoney">0đ</b>
-</div>
-
-<button class="save" onclick="saveCamera()">LƯU SỐ LƯỢNG CAMERA</button>
-</section>
-
-<!-- CHỨC NĂNG ĐI XÃ -->
-<section class="card">
-<h3>🛵 Lịch sử đi xã</h3>
-
-<label class="muted">Ngày đi</label>
-<input type="date" id="tripDate">
-
-<label class="muted">Tên xã</label>
-<input type="text" id="communeName" maxlength="100" placeholder="Ví dụ: Xã Ea Tu">
-
-<button class="save" onclick="addTrip()">+ LƯU CHUYẾN ĐI</button>
-
-<div class="section-note">
-Mỗi lần đi được lưu thành một bản ghi riêng. App tự thống kê số chuyến theo từng xã trong kỳ lương.
-</div>
-
-<div class="stats">
-<div class="stat">
-<span class="muted">Tổng số chuyến</span>
-<strong class="green" id="tripCount">0</strong>
-</div>
-<div class="stat">
-<span class="muted">Số xã đã đi</span>
-<strong id="communeCount">0</strong>
-</div>
-</div>
-
-<h4>Thống kê theo xã</h4>
-<div id="communeStats"></div>
-
-<h4>Lịch sử chuyến đi</h4>
-<div id="tripHistory"></div>
+  <h3>💰 Cài đặt lương</h3>
+  <label class="muted">Lương tháng của bạn (VNĐ)</label>
+  <input type="number" id="salary" min="0" step="1000" placeholder="Ví dụ: 12000000">
+  <button class="save" onclick="saveSalary()">LƯU MỨC LƯƠNG</button>
 </section>
 
 <section class="card">
-<h3>📊 Kỳ lương</h3>
-<label class="muted">Chọn một ngày thuộc kỳ muốn xem</label>
-<input type="date" id="periodDate">
-<div id="periodTitle" style="font-weight:700;margin:10px 0"></div>
+  <h3>📊 Kỳ lương</h3>
+  <label class="muted">Chọn một ngày thuộc kỳ muốn xem</label>
+  <input type="date" id="periodDate">
+  <div id="periodTitle" style="font-weight:700;margin:10px 0"></div>
+  <div class="stats">
+    <div class="stat"><span class="muted">Ngày làm</span><strong class="green" id="workCount">0</strong></div>
+    <div class="stat"><span class="muted">Ngày nghỉ</span><strong class="red" id="restCount">0</strong></div>
+  </div>
+</section>
 
-<div class="stats">
-<div class="stat">
-<span class="muted">Ngày làm</span>
-<strong class="green" id="workCount">0</strong>
-</div>
-<div class="stat">
-<span class="muted">Ngày nghỉ</span>
-<strong class="red" id="restCount">0</strong>
-</div>
-</div>
+<!-- CAMERA: MẶC ĐỊNH THU GỌN -->
+<section class="card">
+  <details>
+    <summary class="section-toggle">📹 Camera lắp đặt</summary>
+    <div class="section-body">
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-label">Tổng camera trong kỳ</span>
+          <strong id="cameraCount">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Tiền công camera</span>
+          <strong class="green" id="cameraMoney">0đ</strong>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;font-weight:700" id="cameraFormTitle">Thêm lần lắp camera</div>
+      <label class="muted">Ngày lắp đặt</label>
+      <input type="date" id="cameraDate">
+
+      <label class="muted">Số lượng camera lắp trong ngày</label>
+      <input type="number" id="cameraQuantity" min="1" step="1" placeholder="Ví dụ: 2">
+
+      <button class="save" id="cameraSaveButton" onclick="saveCamera()">LƯU LẦN LẮP ĐẶT</button>
+      <button class="cancel" id="cameraCancelButton" onclick="cancelCameraEdit()" style="display:none">HỦY SỬA</button>
+
+      <div class="small" style="margin-top:8px">Tiền công: 150.000đ / camera. Nếu lưu lại cùng một ngày, số lượng của ngày đó sẽ được cập nhật thành số mới.</div>
+
+      <details style="margin-top:15px">
+        <summary class="history-toggle">📖 Xem lịch sử lắp camera</summary>
+        <div class="history-body" id="cameraHistory"></div>
+      </details>
+    </div>
+  </details>
+</section>
+
+<!-- ĐI XÃ: MẶC ĐỊNH THU GỌN -->
+<section class="card">
+  <details>
+    <summary class="section-toggle">🛵 Theo dõi đi xã</summary>
+    <div class="section-body">
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-label">Tổng chuyến trong kỳ</span>
+          <strong id="tripCount">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Số xã đã đến</span>
+          <strong id="communeCount">0</strong>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;font-weight:700" id="tripFormTitle">Thêm chuyến đi xã</div>
+      <label class="muted">Ngày đi</label>
+      <input type="date" id="tripDate">
+
+      <label class="muted">Tên xã</label>
+      <input type="text" id="communeName" maxlength="100" placeholder="Ví dụ: Xã Hòa Phú">
+
+      <button class="save" id="tripSaveButton" onclick="saveTrip()">LƯU CHUYẾN ĐI</button>
+      <button class="cancel" id="tripCancelButton" onclick="cancelTripEdit()" style="display:none">HỦY SỬA</button>
+
+      <div style="font-weight:700;margin-top:18px">📍 Thống kê theo xã</div>
+      <div id="communeStats"></div>
+
+      <details style="margin-top:15px">
+        <summary class="history-toggle">📖 Xem lịch sử đi xã</summary>
+        <div class="history-body" id="tripHistory"></div>
+      </details>
+    </div>
+  </details>
 </section>
 
 <section class="card">
-<h3>💵 Tổng kết tiền lương</h3>
-
-<div class="line">
-<span>Lương tháng</span>
-<b id="baseSalary">0đ</b>
-</div>
-
-<div class="line">
-<span>Số ngày lịch trong kỳ</span>
-<b id="days">0</b>
-</div>
-
-<div class="line">
-<span>Tiền mỗi ngày</span>
-<b id="daily">0đ</b>
-</div>
-
-<div class="line">
-<span>Tiền bị trừ do nghỉ</span>
-<b class="red" id="deduction">0đ</b>
-</div>
-
-<div class="line">
-<span>Số camera lắp</span>
-<b id="cameraTotal">0</b>
-</div>
-
-<div class="line">
-<span>Tiền công camera</span>
-<b class="green" id="cameraTotalMoney">0đ</b>
-</div>
-
-<div class="line">
-<span>Số chuyến đi xã</span>
-<b id="tripTotal">0 chuyến</b>
-</div>
-
-<div class="muted" style="margin-top:15px">LƯƠNG DỰ KIẾN</div>
-<div class="money" id="total">0đ</div>
-
-<div class="small">
-Công thức: Lương tháng − tiền nghỉ + tiền công camera.
-Tiền đi xã hiện chỉ thống kê, chưa cộng phụ cấp.
-</div>
+  <h3>💵 Tổng kết tiền lương</h3>
+  <div class="line"><span>Lương tháng</span><b id="baseSalary">0đ</b></div>
+  <div class="line"><span>Số ngày lịch trong kỳ</span><b id="days">0</b></div>
+  <div class="line"><span>Tiền mỗi ngày</span><b id="daily">0đ</b></div>
+  <div class="line"><span>Tiền bị trừ do nghỉ</span><b class="red" id="deduction">0đ</b></div>
+  <div class="line"><span>Tiền công lắp camera</span><b class="green" id="salaryCameraMoney">0đ</b></div>
+  <div class="muted" style="margin-top:15px">LƯƠNG DỰ KIẾN</div>
+  <div class="money" id="total">0đ</div>
+  <div class="small">Công thức: Lương tháng − tiền nghỉ + tiền công lắp camera. Chuyến đi xã hiện chỉ dùng để thống kê.</div>
 </section>
 
 <section class="card">
-<h3>📖 Lịch sử chấm công</h3>
-<div id="history"></div>
+  <h3>📖 Lịch sử chấm công</h3>
+  <div id="history"></div>
 </section>
 
 <footer class="small" style="text-align:center;padding:12px">
-Dữ liệu được lưu trên thiết bị của bạn.
+  Dữ liệu được lưu trên thiết bị của bạn.
 </footer>
-
 </main>
 
 <script>
@@ -208,320 +198,440 @@ const $ = id => document.getElementById(id);
 
 const STORAGE = "chamCongRecordsV1";
 const SALARY = "chamCongSalaryV1";
-
-// Dữ liệu mới, không ảnh hưởng dữ liệu chấm công cũ
-const CAMERA_STORAGE = "chamCongCameraV1";
+const CAMERA_STORAGE = "chamCongCameraEntriesV1";
 const TRIP_STORAGE = "chamCongTripsV1";
-
-const CAMERA_PRICE = 150000;
+const CAMERA_RATE = 150000;
 
 let records = {};
-let cameras = {};
+let cameraEntries = [];
 let trips = [];
-
 let salary = Number(localStorage.getItem(SALARY) || 0);
 
+let editingCameraId = null;
+let editingTripId = null;
+
 function localDate(d=new Date()){
- const y=d.getFullYear();
- const m=String(d.getMonth()+1).padStart(2,"0");
- const day=String(d.getDate()).padStart(2,"0");
- return `${y}-${m}-${day}`;
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
 }
 
 function parseDate(s){
- const [y,m,d]=s.split("-").map(Number);
- return new Date(y,m-1,d);
+  const [y,m,d]=s.split("-").map(Number);
+  return new Date(y,m-1,d);
 }
 
 function fmt(s){
- return parseDate(s).toLocaleDateString("vi-VN");
+  return parseDate(s).toLocaleDateString("vi-VN");
 }
 
 function money(n){
- return Math.round(n).toLocaleString("vi-VN")+"đ";
+  return Math.round(n).toLocaleString("vi-VN")+"đ";
 }
 
-function escapeHTML(s){
- return String(s).replace(/[&<>"']/g,c=>({
- "&":"&amp;",
- "<":"&lt;",
- ">":"&gt;",
- '"':"&quot;",
- "'":"&#39;"
- }[c]));
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[char]);
+}
+
+function newId(){
+  return String(Date.now())+"-"+Math.random().toString(36).slice(2,8);
 }
 
 function load(){
- try{
-  records=JSON.parse(localStorage.getItem(STORAGE)||"{}");
- }catch(e){records={};}
+  try{
+    records=JSON.parse(localStorage.getItem(STORAGE)||"{}");
+    if(!records || typeof records!=="object")records={};
+  }catch(e){records={};}
 
- try{
-  cameras=JSON.parse(localStorage.getItem(CAMERA_STORAGE)||"{}");
- }catch(e){cameras={};}
+  try{
+    cameraEntries=JSON.parse(localStorage.getItem(CAMERA_STORAGE)||"[]");
+    if(!Array.isArray(cameraEntries))cameraEntries=[];
+  }catch(e){cameraEntries=[];}
 
- try{
-  trips=JSON.parse(localStorage.getItem(TRIP_STORAGE)||"[]");
-  if(!Array.isArray(trips))trips=[];
- }catch(e){trips=[];}
+  try{
+    trips=JSON.parse(localStorage.getItem(TRIP_STORAGE)||"[]");
+    if(!Array.isArray(trips))trips=[];
+  }catch(e){trips=[];}
 
- $("salary").value=salary||"";
+  // Hỗ trợ dữ liệu camera từ phiên bản cũ nếu đã từng nhập số lượng theo tháng.
+  // Dữ liệu cũ được giữ lại trong bộ nhớ mới, không xóa khóa cũ.
+  if(!localStorage.getItem(CAMERA_STORAGE)){
+    try{
+      const oldCamera=JSON.parse(localStorage.getItem("chamCongCameraV1")||"{}");
+      if(oldCamera && typeof oldCamera==="object"){
+        Object.entries(oldCamera).forEach(([date,quantity])=>{
+          const q=Number(quantity);
+          if(q>0 && /^\d{4}-\d{2}-\d{2}$/.test(date)){
+            cameraEntries.push({
+              id:"legacy-"+date,
+              date:date,
+              quantity:q,
+              legacy:true
+            });
+          }
+        });
+        saveCameraData();
+      }
+    }catch(e){}
+  }
+
+  $("salary").value=salary||"";
 }
 
 function persist(){
- localStorage.setItem(STORAGE,JSON.stringify(records));
+  localStorage.setItem(STORAGE,JSON.stringify(records));
 }
 
-function persistCamera(){
- localStorage.setItem(CAMERA_STORAGE,JSON.stringify(cameras));
+function saveCameraData(){
+  localStorage.setItem(CAMERA_STORAGE,JSON.stringify(cameraEntries));
 }
 
-function persistTrips(){
- localStorage.setItem(TRIP_STORAGE,JSON.stringify(trips));
+function saveTripData(){
+  localStorage.setItem(TRIP_STORAGE,JSON.stringify(trips));
 }
 
 function getPeriod(dateString){
- const d=parseDate(dateString);
- let y=d.getFullYear(),m=d.getMonth();
-
- if(d.getDate()<26)m--;
-
- const start=new Date(y,m,26);
- const end=new Date(y,m+1,25);
-
- return {start,end};
-}
-
-function getPeriodKey(){
- const chosen=$("periodDate").value||localDate();
- return localDate(getPeriod(chosen).start);
-}
-
-function getCurrentRange(){
- const chosen=$("periodDate").value||localDate();
- const p=getPeriod(chosen);
-
- return {
-  start:localDate(p.start),
-  end:localDate(p.end)
- };
+  const d=parseDate(dateString);
+  let y=d.getFullYear(),m=d.getMonth();
+  if(d.getDate()<26)m--;
+  const start=new Date(y,m,26);
+  const end=new Date(y,m+1,25);
+  return {start,end};
 }
 
 function mark(status){
- const date=$("workDate").value;
+  const date=$("workDate").value;
+  if(!date)return alert("Bạn hãy chọn ngày trước.");
+  if(date>localDate())return alert("Không thể chấm công cho ngày trong tương lai.");
 
- if(!date)return alert("Bạn hãy chọn ngày trước.");
- if(date>localDate())return alert("Không thể chấm công cho ngày trong tương lai.");
-
- records[date]=status;
- persist();
- render();
-
- alert("Đã lưu: "+status+" ngày "+fmt(date));
+  records[date]=status;
+  persist();
+  render();
+  alert("Đã lưu: "+status+" ngày "+fmt(date));
 }
 
 function saveSalary(){
- const n=Number($("salary").value);
+  const n=Number($("salary").value);
+  if(!Number.isFinite(n)||n<0)return alert("Vui lòng nhập mức lương hợp lệ.");
 
- if(!Number.isFinite(n)||n<0)
-  return alert("Vui lòng nhập mức lương hợp lệ.");
-
- salary=n;
- localStorage.setItem(SALARY,String(salary));
-
- render();
- alert("Đã lưu mức lương.");
+  salary=n;
+  localStorage.setItem(SALARY,String(salary));
+  render();
+  alert("Đã lưu mức lương.");
 }
 
 function removeRecord(date){
- if(!confirm("Xóa chấm công ngày "+fmt(date)+"?"))return;
-
- delete records[date];
- persist();
- render();
+  if(!confirm("Xóa chấm công ngày "+fmt(date)+"?"))return;
+  delete records[date];
+  persist();
+  render();
 }
 
-// LƯU SỐ LƯỢNG CAMERA THEO KỲ LƯƠNG
+/* =========================
+   CAMERA
+========================= */
+
 function saveCamera(){
- const value=$("cameraCount").value;
+  const date=$("cameraDate").value;
+  const quantity=Number($("cameraQuantity").value);
 
- if(value.trim()==="" || !Number.isInteger(Number(value)) || Number(value)<0)
-  return alert("Vui lòng nhập số lượng camera hợp lệ.");
+  if(!date)return alert("Bạn hãy chọn ngày lắp camera.");
+  if(date>localDate())return alert("Không thể nhập ngày lắp trong tương lai.");
+  if(!Number.isInteger(quantity)||quantity<1)return alert("Số lượng camera phải là số nguyên lớn hơn 0.");
 
- const key=getPeriodKey();
+  if(editingCameraId!==null){
+    const index=cameraEntries.findIndex(x=>String(x.id)===String(editingCameraId));
+    if(index<0){
+      cancelCameraEdit();
+      return alert("Không tìm thấy dữ liệu cần sửa.");
+    }
 
- cameras[key]=Number(value);
+    const duplicate=cameraEntries.findIndex((x,i)=>x.date===date&&i!==index);
+    if(duplicate>=0){
+      return alert("Ngày này đã có bản ghi camera khác. Bạn hãy chọn ngày khác hoặc sửa bản ghi của ngày đó.");
+    }
 
- persistCamera();
- render();
+    cameraEntries[index].date=date;
+    cameraEntries[index].quantity=quantity;
+    delete cameraEntries[index].legacy;
 
- alert("Đã lưu số lượng camera cho kỳ lương này.");
+    saveCameraData();
+    cancelCameraEdit();
+    render();
+    alert("Đã cập nhật lần lắp camera.");
+    return;
+  }
+
+  const existing=cameraEntries.find(x=>x.date===date);
+
+  if(existing){
+    if(!confirm("Ngày "+fmt(date)+" đã có dữ liệu "+existing.quantity+" camera. Bạn muốn thay bằng số lượng "+quantity+" camera?"))return;
+    existing.quantity=quantity;
+    delete existing.legacy;
+  }else{
+    cameraEntries.push({
+      id:newId(),
+      date:date,
+      quantity:quantity
+    });
+  }
+
+  saveCameraData();
+  $("cameraQuantity").value="";
+  render();
+  alert("Đã lưu số lượng camera lắp đặt.");
 }
 
-// THÊM CHUYẾN ĐI XÃ
-function addTrip(){
- const date=$("tripDate").value;
- const commune=$("communeName").value.trim();
+function editCamera(id){
+  const item=cameraEntries.find(x=>String(x.id)===String(id));
+  if(!item)return;
 
- if(!date)return alert("Vui lòng chọn ngày đi.");
- if(!commune)return alert("Vui lòng nhập tên xã.");
- if(date>localDate())return alert("Không thể ghi nhận chuyến đi trong tương lai.");
+  editingCameraId=item.id;
+  $("cameraDate").value=item.date;
+  $("cameraQuantity").value=item.quantity;
+  $("cameraFormTitle").textContent="Đang sửa lần lắp camera";
+  $("cameraSaveButton").textContent="CẬP NHẬT LẦN LẮP";
+  $("cameraCancelButton").style.display="block";
 
- trips.push({
-  id:Date.now(),
-  date:date,
-  commune:commune
- });
-
- persistTrips();
-
- $("communeName").value="";
-
- render();
-
- alert("Đã lưu chuyến đi "+commune+" ngày "+fmt(date));
+  $("cameraDate").scrollIntoView({behavior:"smooth",block:"center"});
 }
 
-// XÓA CHUYẾN ĐI
-function removeTrip(id){
- if(!confirm("Bạn có chắc muốn xóa chuyến đi này?"))return;
-
- trips=trips.filter(t=>t.id!==id);
-
- persistTrips();
- render();
+function cancelCameraEdit(){
+  editingCameraId=null;
+  $("cameraDate").value=localDate();
+  $("cameraQuantity").value="";
+  $("cameraFormTitle").textContent="Thêm lần lắp camera";
+  $("cameraSaveButton").textContent="LƯU LẦN LẮP ĐẶT";
+  $("cameraCancelButton").style.display="none";
 }
 
-// HIỂN THỊ
+function deleteCamera(id){
+  const item=cameraEntries.find(x=>String(x.id)===String(id));
+  if(!item)return;
+
+  if(!confirm("Xóa dữ liệu lắp "+item.quantity+" camera ngày "+fmt(item.date)+"?"))return;
+
+  cameraEntries=cameraEntries.filter(x=>String(x.id)!==String(id));
+  saveCameraData();
+
+  if(String(editingCameraId)===String(id))cancelCameraEdit();
+  render();
+}
+
+/* =========================
+   ĐI XÃ
+========================= */
+
+function saveTrip(){
+  const date=$("tripDate").value;
+  const commune=$("communeName").value.trim();
+
+  if(!date)return alert("Bạn hãy chọn ngày đi.");
+  if(date>localDate())return alert("Không thể nhập chuyến đi trong tương lai.");
+  if(!commune)return alert("Bạn hãy nhập tên xã.");
+
+  if(editingTripId!==null){
+    const item=trips.find(x=>String(x.id)===String(editingTripId));
+    if(!item){
+      cancelTripEdit();
+      return alert("Không tìm thấy chuyến đi cần sửa.");
+    }
+
+    item.date=date;
+    item.commune=commune;
+
+    saveTripData();
+    cancelTripEdit();
+    render();
+    alert("Đã cập nhật chuyến đi.");
+    return;
+  }
+
+  trips.push({
+    id:newId(),
+    date:date,
+    commune:commune
+  });
+
+  saveTripData();
+  $("communeName").value="";
+  render();
+  alert("Đã lưu chuyến đi xã.");
+}
+
+function editTrip(id){
+  const item=trips.find(x=>String(x.id)===String(id));
+  if(!item)return;
+
+  editingTripId=item.id;
+  $("tripDate").value=item.date;
+  $("communeName").value=item.commune;
+  $("tripFormTitle").textContent="Đang sửa chuyến đi";
+  $("tripSaveButton").textContent="CẬP NHẬT CHUYẾN ĐI";
+  $("tripCancelButton").style.display="block";
+
+  $("tripDate").scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+function cancelTripEdit(){
+  editingTripId=null;
+  $("tripDate").value=localDate();
+  $("communeName").value="";
+  $("tripFormTitle").textContent="Thêm chuyến đi xã";
+  $("tripSaveButton").textContent="LƯU CHUYẾN ĐI";
+  $("tripCancelButton").style.display="none";
+}
+
+function deleteTrip(id){
+  const item=trips.find(x=>String(x.id)===String(id));
+  if(!item)return;
+
+  if(!confirm("Xóa chuyến đi "+item.commune+" ngày "+fmt(item.date)+"?"))return;
+
+  trips=trips.filter(x=>String(x.id)!==String(id));
+  saveTripData();
+
+  if(String(editingTripId)===String(id))cancelTripEdit();
+  render();
+}
+
+/* =========================
+   HIỂN THỊ
+========================= */
+
 function render(){
- const now=new Date();
+  const now=new Date();
 
- $("today").textContent=now.toLocaleDateString("vi-VN");
- $("weekday").textContent=now.toLocaleDateString("vi-VN",{weekday:"long"});
+  $("today").textContent=now.toLocaleDateString("vi-VN");
+  $("weekday").textContent=now.toLocaleDateString("vi-VN",{weekday:"long"});
 
- const selected=$("workDate").value;
+  const selected=$("workDate").value;
+  $("selectedStatus").textContent=records[selected]
+    ?"Đã chấm ngày này: "+records[selected]
+    :"Ngày này chưa được chấm.";
 
- $("selectedStatus").textContent=
-  records[selected]?
-  "Đã chấm ngày này: "+records[selected]:
-  "Ngày này chưa được chấm.";
+  const chosen=$("periodDate").value||localDate();
+  const p=getPeriod(chosen);
+  const start=localDate(p.start);
+  const end=localDate(p.end);
 
- const chosen=$("periodDate").value||localDate();
- const p=getPeriod(chosen);
+  const list=Object.entries(records).filter(([date])=>date>=start&&date<=end);
+  const works=list.filter(x=>x[1]==="Làm").length;
+  const rests=list.filter(x=>x[1]==="Nghỉ").length;
 
- const start=localDate(p.start);
- const end=localDate(p.end);
+  const days=Math.round((p.end-p.start)/86400000)+1;
+  const daily=days?salary/days:0;
+  const deduction=daily*rests;
 
- // CHẤM CÔNG
- const list=Object.entries(records)
-  .filter(([date])=>date>=start&&date<=end);
+  const periodCameras=cameraEntries.filter(x=>x.date>=start&&x.date<=end);
+  const cameraCount=periodCameras.reduce((sum,x)=>sum+(Number(x.quantity)||0),0);
+  const cameraPay=cameraCount*CAMERA_RATE;
 
- const works=list.filter(x=>x[1]==="Làm").length;
- const rests=list.filter(x=>x[1]==="Nghỉ").length;
+  const periodTrips=trips.filter(x=>x.date>=start&&x.date<=end);
 
- const days=Math.round((p.end-p.start)/86400000)+1;
- const daily=days?salary/days:0;
- const deduction=daily*rests;
+  $("periodTitle").textContent="Từ "+fmt(start)+" đến "+fmt(end);
+  $("workCount").textContent=works;
+  $("restCount").textContent=rests;
 
- // CAMERA
- const cameraCount=Number(cameras[start]||0);
- const cameraMoney=cameraCount*CAMERA_PRICE;
+  $("baseSalary").textContent=money(salary);
+  $("days").textContent=days+" ngày";
+  $("daily").textContent=money(daily);
+  $("deduction").textContent="-"+money(deduction);
 
- $("cameraCount").value=cameraCount;
- $("cameraMoney").textContent=money(cameraMoney);
+  $("cameraCount").textContent=cameraCount;
+  $("cameraMoney").textContent=money(cameraPay);
+  $("salaryCameraMoney").textContent="+"+money(cameraPay);
 
- // ĐI XÃ
- const periodTrips=trips.filter(t=>
-  t.date>=start&&t.date<=end
- );
+  $("tripCount").textContent=periodTrips.length;
 
- const communeGroups={};
+  const communeMap={};
+  periodTrips.forEach(item=>{
+    const name=String(item.commune||"").trim();
+    if(name)communeMap[name]=(communeMap[name]||0)+1;
+  });
 
- periodTrips.forEach(t=>{
-  const name=t.commune.trim();
-  communeGroups[name]=(communeGroups[name]||0)+1;
- });
+  const communeList=Object.entries(communeMap).sort((a,b)=>b[1]-a[1]);
+  $("communeCount").textContent=communeList.length;
 
- const communeNames=Object.keys(communeGroups);
+  $("communeStats").innerHTML=communeList.length
+    ?communeList.map(([name,count])=>
+      `<div class="line"><span>${escapeHTML(name)}</span><b>${count} chuyến</b></div>`
+    ).join("")
+    :'<div class="empty">Chưa có chuyến đi xã trong kỳ này.</div>';
 
- $("tripCount").textContent=periodTrips.length;
- $("communeCount").textContent=communeNames.length;
+  $("total").textContent=money(Math.max(0,salary-deduction)+cameraPay);
 
- $("communeStats").innerHTML=communeNames.length?
-  communeNames.sort((a,b)=>a.localeCompare(b,"vi")).map(name=>
-   `<div class="line">
-    <span>${escapeHTML(name)}</span>
-    <b>${communeGroups[name]} lần</b>
-   </div>`
-  ).join("") :
-  '<div class="muted">Chưa có chuyến đi nào trong kỳ này.</div>';
+  // Lịch sử chấm công
+  const history=list.sort((a,b)=>b[0].localeCompare(a[0]));
 
- const sortedTrips=[...periodTrips].sort((a,b)=>
-  b.date.localeCompare(a.date)||b.id-a.id
- );
+  $("history").innerHTML=history.length
+    ?history.map(([date,status])=>
+      `<div class="record">
+        <span>${fmt(date)}</span>
+        <b class="${status==="Làm"?"green":"red"}">${status}</b>
+        <button onclick="removeRecord('${date}')">Xóa</button>
+      </div>`
+    ).join("")
+    :'<div class="muted">Chưa có dữ liệu trong kỳ này.</div>';
 
- $("tripHistory").innerHTML=sortedTrips.length?
-  sortedTrips.map(t=>
-   `<div class="record">
-    <div>
-     <b>${escapeHTML(t.commune)}</b>
-     <div class="small">${fmt(t.date)}</div>
-    </div>
-    <button onclick="removeTrip(${Number(t.id)})">Xóa</button>
-   </div>`
-  ).join("") :
-  '<div class="muted">Chưa có lịch sử đi xã trong kỳ này.</div>';
+  // Lịch sử camera
+  const cameraHistory=[...periodCameras].sort((a,b)=>b.date.localeCompare(a.date));
 
- // TỔNG KẾT
- $("periodTitle").textContent="Từ "+fmt(start)+" đến "+fmt(end);
+  $("cameraHistory").innerHTML=cameraHistory.length
+    ?cameraHistory.map(item=>
+      `<div class="record">
+        <div class="record-info">
+          <b>${fmt(item.date)}</b>
+          <div class="small">${item.legacy?"Dữ liệu camera từ phiên bản trước":"Số lượng: "+item.quantity+" camera"}</div>
+          <div class="green small">${money((Number(item.quantity)||0)*CAMERA_RATE)}</div>
+        </div>
+        <div class="record-actions">
+          <button class="edit" onclick="editCamera('${escapeHTML(item.id)}')">Sửa</button>
+          <button onclick="deleteCamera('${escapeHTML(item.id)}')">Xóa</button>
+        </div>
+      </div>`
+    ).join("")
+    :'<div class="empty">Chưa có lần lắp camera nào trong kỳ này.</div>';
 
- $("workCount").textContent=works;
- $("restCount").textContent=rests;
+  // Lịch sử đi xã
+  const tripHistory=[...periodTrips].sort((a,b)=>b.date.localeCompare(a.date));
 
- $("baseSalary").textContent=money(salary);
- $("days").textContent=days+" ngày";
- $("daily").textContent=money(daily);
- $("deduction").textContent="-"+money(deduction);
-
- $("cameraTotal").textContent=cameraCount+" camera";
- $("cameraTotalMoney").textContent=money(cameraMoney);
-
- $("tripTotal").textContent=periodTrips.length+" chuyến";
-
- const estimatedSalary=Math.max(0,salary-deduction)+cameraMoney;
-
- $("total").textContent=money(estimatedSalary);
-
- // LỊCH SỬ CHẤM CÔNG
- const history=list.sort((a,b)=>b[0].localeCompare(a[0]));
-
- $("history").innerHTML=history.length?
-  history.map(([date,status])=>
-   `<div class="record">
-    <span>${fmt(date)}</span>
-    <b class="${status==="Làm"?"green":"red"}">${status}</b>
-    <button onclick="removeRecord('${date}')">Xóa</button>
-   </div>`
-  ).join("") :
-  '<div class="muted">Chưa có dữ liệu trong kỳ này.</div>';
+  $("tripHistory").innerHTML=tripHistory.length
+    ?tripHistory.map(item=>
+      `<div class="record">
+        <div class="record-info">
+          <b>${fmt(item.date)}</b>
+          <div>${escapeHTML(item.commune)}</div>
+        </div>
+        <div class="record-actions">
+          <button class="edit" onclick="editTrip('${escapeHTML(item.id)}')">Sửa</button>
+          <button onclick="deleteTrip('${escapeHTML(item.id)}')">Xóa</button>
+        </div>
+      </div>`
+    ).join("")
+    :'<div class="empty">Chưa có chuyến đi xã nào trong kỳ này.</div>';
 }
 
-// KHỞI TẠO
 $("workDate").value=localDate();
-$("tripDate").value=localDate();
 $("periodDate").value=localDate();
+$("cameraDate").value=localDate();
+$("tripDate").value=localDate();
 
 $("workDate").addEventListener("change",render);
-
 $("periodDate").addEventListener("change",render);
 
 load();
 render();
 
 if("serviceWorker" in navigator){
- window.addEventListener("load",()=>{
-  navigator.serviceWorker.register("./sw.js").catch(console.error);
- });
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));
 }
 </script>
 </body>
