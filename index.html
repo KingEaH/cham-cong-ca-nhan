@@ -625,6 +625,11 @@ $("periodDate").value=localDate();
 $("cameraDate").value=localDate();
 $("tripDate").value=localDate();
 
+// Luôn thu gọn hai mục Camera và Đi xã mỗi khi tải lại ứng dụng.
+document.querySelectorAll("main > section.card > details").forEach(section=>{
+  section.removeAttribute("open");
+});
+
 $("workDate").addEventListener("change",render);
 $("periodDate").addEventListener("change",render);
 
