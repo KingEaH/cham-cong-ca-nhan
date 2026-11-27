@@ -178,6 +178,7 @@ details[open]>.section-toggle::after{content:"−"}
   <div class="line"><span>Tiền mỗi ngày</span><b id="daily">0đ</b></div>
   <div class="line"><span>Tiền bị trừ do nghỉ</span><b class="red" id="deduction">0đ</b></div>
   <div class="line"><span>Tiền công lắp camera</span><b class="green" id="salaryCameraMoney">0đ</b></div>
+  <div class="line"><span>Số chuyến đi xã</span><b id="salaryTripCount">0 chuyến</b></div>
   <div class="muted" style="margin-top:15px">LƯƠNG DỰ KIẾN</div>
   <div class="money" id="total">0đ</div>
   <div class="small">Công thức: Lương tháng − tiền nghỉ + tiền công lắp camera. Chuyến đi xã hiện chỉ dùng để thống kê.</div>
@@ -550,7 +551,7 @@ function render(){
   $("salaryCameraMoney").textContent="+"+money(cameraPay);
 
   $("tripCount").textContent=periodTrips.length;
-
+$("salaryTripCount").textContent=periodTrips.length+" chuyến";
   const communeMap={};
   periodTrips.forEach(item=>{
     const name=String(item.commune||"").trim();
