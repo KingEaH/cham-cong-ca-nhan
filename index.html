@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#166534">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chấm Công">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Chấm Công Cá Nhân</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f6f4;color:#17251c;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:520px;margin:auto;padding:20px 16px 45px}
+header{text-align:center;padding:18px 0}
+h1{font-size:23px;margin:5px}
+.muted{color:#718078;font-size:14px}
+.card{background:white;border-radius:18px;padding:18px;margin:13px 0;box-shadow:0 3px 14px #00000009}
+.today{font-size:30px;font-weight:800;margin:10px}
+input,button{font:inherit}
+input[type=date],input[type=number]{width:100%;padding:13px;border:1px solid #dce5de;border-radius:11px;background:white;margin:7px 0}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+button{border:0;border-radius:12px;padding:14px;font-weight:700;cursor:pointer}
+.work{background:#168044;color:white}
+.rest{background:#c43d3d;color:white}
+.save{background:#166534;color:white;width:100%;margin-top:8px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#f2f7f3;padding:15px;border-radius:13px}
+.stat strong{display:block;font-size:26px;margin-top:5px}
+.green{color:#168044}.red{color:#c43d3d}
+.money{font-size:27px;font-weight:800;color:#168044;margin:10px 0}
+.line{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #edf0ed;font-size:14px}
+.record{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #eee}
+.record button{padding:7px 10px;background:#fff0f0;color:#b42323;font-size:12px}
+.small{font-size:12px;color:#718078}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>📅 CHẤM CÔNG CÁ NHÂN</h1>
+  <div class="muted">Quản lý ngày làm và tiền lương</div>
+  <div class="today" id="today"></div>
+  <div class="muted" id="weekday"></div>
+</header>
+
+<section class="card">
+  <h3>Chấm công</h3>
+  <label class="muted">Chọn ngày muốn chấm</label>
+  <input type="date" id="workDate">
+  <div id="selectedStatus" class="muted"></div>
+  <div class="buttons">
+    <button class="work" onclick="mark('Làm')">✓ LÀM</button>
+    <button class="rest" onclick="mark('Nghỉ')">☕ NGHỈ</button>
+  </div>
+  <div class="small" style="margin-top:10px">Có thể chọn ngày cũ để bổ sung hoặc sửa chấm công.</div>
+</section>
+
+<section class="card">
+  <h3>💰 Cài đặt lương</h3>
+  <label class="muted">Lương tháng của bạn (VNĐ)</label>
+  <input type="number" id="salary" min="0" step="1000" placeholder="Ví dụ: 12000000">
+  <button class="save" onclick="saveSalary()">LƯU MỨC LƯƠNG</button>
+</section>
+
+<section class="card">
+  <h3>📊 Kỳ lương</h3>
+  <label class="muted">Chọn một ngày thuộc kỳ muốn xem</label>
+  <input type="date" id="periodDate">
+  <div id="periodTitle" style="font-weight:700;margin:10px 0"></div>
+  <div class="stats">
+    <div class="stat"><span class="muted">Ngày làm</span><strong class="green" id="workCount">0</strong></div>
+    <div class="stat"><span class="muted">Ngày nghỉ</span><strong class="red" id="restCount">0</strong></div>
+  </div>
+</section>
+
+<section class="card">
+  <h3>💵 Tổng kết tiền lương</h3>
+  <div class="line"><span>Lương tháng</span><b id="baseSalary">0đ</b></div>
+  <div class="line"><span>Số ngày lịch trong kỳ</span><b id="days">0</b></div>
+  <div class="line"><span>Tiền mỗi ngày</span><b id="daily">0đ</b></div>
+  <div class="line"><span>Tiền bị trừ do nghỉ</span><b class="red" id="deduction">0đ</b></div>
+  <div class="muted" style="margin-top:15px">LƯƠNG DỰ KIẾN</div>
+  <div class="money" id="total">0đ</div>
+  <div class="small">Công thức: Lương tháng − (tiền mỗi ngày × số ngày nghỉ đã ghi nhận).</div>
+</section>
+
+<section class="card">
+  <h3>📖 Lịch sử chấm công</h3>
+  <div id="history"></div>
+</section>
+
+<footer class="small" style="text-align:center;padding:12px">
+  Dữ liệu được lưu trên thiết bị của bạn.
+</footer>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const STORAGE = "chamCongRecordsV1";
+const SALARY = "chamCongSalaryV1";
+let records = {};
+let salary = Number(localStorage.getItem(SALARY) || 0);
+
+function localDate(d=new Date()){
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function parseDate(s){
+  const [y,m,d]=s.split("-").map(Number);
+  return new Date(y,m-1,d);
+}
+function fmt(s){
+  return parseDate(s).toLocaleDateString("vi-VN");
+}
+function money(n){
+  return Math.round(n).toLocaleString("vi-VN")+"đ";
+}
+function load(){
+  try{records=JSON.parse(localStorage.getItem(STORAGE)||"{}")}catch(e){records={}}
+  $("salary").value=salary||"";
+}
+function persist(){
+  localStorage.setItem(STORAGE,JSON.stringify(records));
+}
+function getPeriod(dateString){
+  const d=parseDate(dateString);
+  let y=d.getFullYear(),m=d.getMonth();
+  if(d.getDate()<26){m--;}
+  const start=new Date(y,m,26);
+  const end=new Date(y,m+1,25);
+  return {start,end};
+}
+function dateKey(d){return localDate(d)}
+function mark(status){
+  const date=$("workDate").value;
+  if(!date)return alert("Bạn hãy chọn ngày trước.");
+  if(date>localDate())return alert("Không thể chấm công cho ngày trong tương lai.");
+  records[date]=status;
+  persist();
+  render();
+  alert("Đã lưu: "+status+" ngày "+fmt(date));
+}
+function saveSalary(){
+  const n=Number($("salary").value);
+  if(!Number.isFinite(n)||n<0)return alert("Vui lòng nhập mức lương hợp lệ.");
+  salary=n;
+  localStorage.setItem(SALARY,String(salary));
+  render();
+  alert("Đã lưu mức lương.");
+}
+function removeRecord(date){
+  if(!confirm("Xóa chấm công ngày "+fmt(date)+"?"))return;
+  delete records[date];
+  persist();
+  render();
+}
+function render(){
+  const now=new Date();
+  $("today").textContent=now.toLocaleDateString("vi-VN");
+  $("weekday").textContent=now.toLocaleDateString("vi-VN",{weekday:"long"});
+  const selected=$("workDate").value;
+  $("selectedStatus").textContent=records[selected]?"Đã chấm ngày này: "+records[selected]:"Ngày này chưa được chấm.";
+  const chosen=$("periodDate").value||localDate();
+  const p=getPeriod(chosen);
+  const start=localDate(p.start),end=localDate(p.end);
+  const list=Object.entries(records).filter(([date])=>date>=start&&date<=end);
+  const works=list.filter(x=>x[1]==="Làm").length;
+  const rests=list.filter(x=>x[1]==="Nghỉ").length;
+  const days=Math.round((p.end-p.start)/86400000)+1;
+  const daily=days?salary/days:0;
+  const deduction=daily*rests;
+  $("periodTitle").textContent="Từ "+fmt(start)+" đến "+fmt(end);
+  $("workCount").textContent=works;
+  $("restCount").textContent=rests;
+  $("baseSalary").textContent=money(salary);
+  $("days").textContent=days+" ngày";
+  $("daily").textContent=money(daily);
+  $("deduction").textContent="-"+money(deduction);
+  $("total").textContent=money(Math.max(0,salary-deduction));
+  const history=list.sort((a,b)=>b[0].localeCompare(a[0]));
+  $("history").innerHTML=history.length?history.map(([date,status])=>
+    `<div class="record"><span>${fmt(date)}</span><b class="${status==="Làm"?"green":"red"}">${status}</b><button onclick="removeRecord('${date}')">Xóa</button></div>`
+  ).join(""):'<div class="muted">Chưa có dữ liệu trong kỳ này.</div>';
+}
+$("workDate").value=localDate();
+$("periodDate").value=localDate();
+$("workDate").addEventListener("change",render);
+$("periodDate").addEventListener("change",render);
+load();
+render();
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));
+}
+</script>
+</body>
+</html>
